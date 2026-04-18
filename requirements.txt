@@ -1,4 +1,6 @@
-cp langgraph>=0.2.0
+# Requirements for the interview preparation graph application
+
+langgraph>=0.2.0
 langchain-openai>=0.2.0
 python-dotenv>=1.0.0
 pydantic>=2.0.0
