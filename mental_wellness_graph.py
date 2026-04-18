@@ -65,6 +65,7 @@ class WellnessState(BaseModel):
     breathing_suggestion: str = ""
     mindfulness_suggestion: str = ""
     movement_suggestion: str = ""
+    differentiator_suggestion: str = ""
     needs_deep_session: bool = False
     practice_reason: str = ""
     final_suggestion: str = ""
@@ -127,6 +128,19 @@ def suggest_movement(state: WellnessState) -> dict:
         "messages": [f"[suggest_movement] Done"]
     }
 
+def suggest_differentiator(state: WellnessState) -> dict:
+    response = llm.invoke(
+        f"You are a mental wellness differentiator. "
+        f"The user feels: '{state.user_feeling}'. "
+        f"Suggest ONE specific way to uplift the mood such a movie, or a book, or listening to certain type of music or anything based on the previous suggestions that can help achieve a better mental state. "
+        f"Include the differentiator name, simple instructions, and duration. "
+        f"Depending on the type of differentiator, decide whether a deep session is required or what can be done in quick session."
+    )
+    return {
+        "differentiator_suggestion": response.content,
+        "messages": [f"[suggest_differentiator] Done"]
+    }
+        
 
 def pick_best_practice(state: WellnessState) -> dict:
     response = llm.invoke(
@@ -135,6 +149,7 @@ def pick_best_practice(state: WellnessState) -> dict:
         f"BREATHING:\n{state.breathing_suggestion}\n\n"
         f"MINDFULNESS:\n{state.mindfulness_suggestion}\n\n"
         f"MOVEMENT:\n{state.movement_suggestion}\n\n"
+        f"DIFFERENTIATOR:\n{state.differentiator_suggestion}\n\n"
         f"Decide: does this person need a QUICK practice (under 5 min, for mild/moderate feelings) "
         f"or a DEEP session (10-15 min, for high stress/anxiety/overwhelm)?\n\n"
         f"Reply STRICTLY in this JSON format (no other text):\n"
@@ -163,6 +178,7 @@ def quick_practice(state: WellnessState) -> dict:
         f"BREATHING: {state.breathing_suggestion}\n"
         f"MINDFULNESS: {state.mindfulness_suggestion}\n"
         f"MOVEMENT: {state.movement_suggestion}\n\n"
+        f"DIFFERENTIATOR: {state.differentiator_suggestion}\n\n"
         f"Format it as a simple numbered list of steps. "
         f"Keep it warm, encouraging, and easy to follow. End with a kind closing line."
     )
@@ -180,7 +196,8 @@ def deep_practice(state: WellnessState) -> dict:
         f"BREATHING: {state.breathing_suggestion}\n"
         f"MINDFULNESS: {state.mindfulness_suggestion}\n"
         f"MOVEMENT: {state.movement_suggestion}\n\n"
-        f"Structure it in 3 phases: Settle (breathing), Ground (mindfulness), Release (movement). "
+        f"DIFFERENTIATOR: {state.differentiator_suggestion}\n\n"
+        f"Structure it in 4 phases: Settle (breathing), Ground (mindfulness), Release (movement), Differentiator(differentiator). "
         f"Give clear step-by-step instructions for each phase with timing. "
         f"Keep it warm and supportive. End with a kind closing message."
     )
@@ -203,6 +220,7 @@ graph.add_node("understand_mood", understand_mood)
 graph.add_node("suggest_breathing", suggest_breathing)
 graph.add_node("suggest_mindfulness", suggest_mindfulness)
 graph.add_node("suggest_movement", suggest_movement)
+graph.add_node("suggest_differentiator", suggest_differentiator)
 graph.add_node("pick_best_practice", pick_best_practice)
 graph.add_node("quick_practice", quick_practice)
 graph.add_node("deep_practice", deep_practice)
@@ -212,10 +230,12 @@ graph.add_edge(START, "understand_mood")
 graph.add_edge("understand_mood", "suggest_breathing")
 graph.add_edge("understand_mood", "suggest_mindfulness")
 graph.add_edge("understand_mood", "suggest_movement")
+graph.add_edge("understand_mood", "suggest_differentiator")
 
 graph.add_edge("suggest_breathing", "pick_best_practice")
 graph.add_edge("suggest_mindfulness", "pick_best_practice")
 graph.add_edge("suggest_movement", "pick_best_practice")
+graph.add_edge("suggest_differentiator", "pick_best_practice")
 
 graph.add_conditional_edges(
     "pick_best_practice",
